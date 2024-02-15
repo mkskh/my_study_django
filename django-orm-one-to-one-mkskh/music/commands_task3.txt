@@ -1,0 +1,95 @@
+1.
+
+
+python manage.py load_fake_songs
+
+
+(.venv) dci-student@mks-kh:~/all/django/django-orm-one-to-one-pytech/app$ python manage.py shell
+Python 3.11.7 (main, Dec  8 2023, 18:56:57) [GCC 9.4.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from django.contrib.auth import get_user_model
+>>> User = get_user_model()
+>>> u1_super = User.objects.create_superuser('admin', 'admin@gmail.com', 'admin')
+>>> u2 = User.objects.create_user('user2', 'user2@gmail.com', 'user2')
+>>> u3 = User.objects.create_user('user3', 'user3@gmail.com', 'user3')
+>>> u4 = User.objects.create_user('user4', 'user4@gmail.com', 'user4')
+>>> u5 = User.objects.create_user('user5', 'user5@gmail.com', 'user5')
+>>> 
+>>> from music.models import Profile
+>>> from music.models import Song
+>>> song1 = Song.objects.get(id=22)
+>>> pr1 = Profile.objects.create(user=u1_super, preferred_style="Indie", preferred_song=song1)
+>>> song2 = Song.objects.get(id=85)
+>>> song3 = Song.objects.get(id=67)
+
+>>> pr2 = Profile.objects.create(user=u2, daily_start_time="09:25:21", daily_finish_time="10:02:35", preferred_style="Pop", preferred_song=song2)
+>>> pr3 = Profile.objects.create(user=u3, daily_start_time="09:15:21", daily_finish_time="14:12:35", preferred_style="Rock", preferred_song=song3)
+>>> pr4 = Profile.objects.create(user=u4, daily_start_time="09:19:21", daily_finish_time="14:22:35", preferred_style="Classic", preferred_song=song2)
+>>> pr5 = Profile.objects.create(user=u5, daily_start_time="09:16:18", daily_finish_time="14:32:11", preferred_style="Folk", preferred_song=song1)
+>>> 
+
+>>> pr2.daily_finish_time="14:02:35"
+>>> pr2.save()
+
+
+
+>>> User.objects.values("username", "profile__preferred_style", "profile__preferred_song")
+<QuerySet [{'username': 'admin', 'profile__preferred_style': 'Indie', 'profile__preferred_song': 22}, {'username': 'user2', 'profile__preferred_style': 'Pop', 'profile__preferred_song': 85}, {'username': 'user3', 'profile__preferred_style': 'Rock', 'profile__preferred_song': 67}, {'username': 'user4', 'profile__preferred_style': 'Classic', 'profile__preferred_song': 85}, {'username': 'user5', 'profile__preferred_style': 'Folk', 'profile__preferred_song': 22}]>
+>>> 
+
+
+
+
+####
+(another way)
+
+>>> users_with_profile = User.objects.filter(profile__isnull=False).prefetch_related('profile')
+>>> for user in users_with_profile:
+...     profile = user.profile
+...     print(f"Username: {user.username}, Preferred Style: {profile.preferred_style}, Preferred Song: {profile.preferred_song.title if profile.preferred_song else 'None'}")
+... 
+Username: admin, Preferred Style: Indie, Preferred Song: Audio number 4
+Username: user3, Preferred Style: Rock, Preferred Song: Audio number 7
+Username: user4, Preferred Style: Classic, Preferred Song: Audio number 3
+Username: user5, Preferred Style: Folk, Preferred Song: Audio number 4
+Username: user2, Preferred Style: Pop, Preferred Song: Audio number 3
+>>> 
+
+
+
+
+2.
+
+>>> from music.models import Song, Profile
+>>> from django.contrib.auth import get_user_model
+>>> User = get_user_model()
+>>> all = Song.objects.all()
+
+
+superadmin = User.objects.create_superuser("superadmin", "admin@example.com", "pbkdf2_sha256$260000$eKXAuTXbSkQwqrJGG4YHfE$wG7z5S1d1QbEmAB7vVG3KkBLeo94yI9LU9MAAZJLm+c=")
+
+
+>>> for piece in all:
+...     piece.created_by=superadmin
+...     piece.save()
+... 
+>>> for piece in all:
+...     piece.last_modified_by=superadmin
+...     piece.save()
+
+3.
+
+>>> jos = User.objects.get(username="josephine")
+>>> jos
+<User: josephine>
+>>> pr_jos = Profile.objects.create(user=jos, daily_start_time="09:25:21", daily_finish_time="10:02:35", preferred_style="Pop")
+>>> pr_jos.preferred_style
+'Pop'
+>>> all_songs_j = Song.objects.filter(style=pr_jos.preferred_style)
+>>> all_songs_j
+<QuerySet [<Song: Song object (9)>, <Song: Song object (25)>, <Song: Song object (35)>, <Song: Song object (39)>, <Song: Song object (44)>, <Song: Song object (57)>, <Song: Song object (58)>, <Song: Song object (59)>, <Song: Song object (65)>, <Song: Song object (67)>, <Song: Song object (70)>, <Song: Song object (76)>, <Song: Song object (90)>, <Song: Song object (93)>, <Song: Song object (108)>, <Song: Song object (113)>, <Song: Song object (119)>, <Song: Song object (120)>, <Song: Song object (125)>, <Song: Song object (127)>, '...(remaining elements truncated)...']>
+>>> 
+
+
+>>> 
